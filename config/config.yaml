@@ -22,7 +22,7 @@ model:
   save_path: "./models/intelligent_typesetting_model"
 
   ckip:
-    model_name: "bert-base"
+    model_name: "bert-base-chinese"
     device: "auto"  # auto, cpu, cuda, cuda:0
     batch_size: 16  # 4090D显卡优化
     

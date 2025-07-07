@@ -304,10 +304,15 @@ class CkipProcessor:
         while i < len(tokens):
             token = tokens[i]
             
+            # 跳过空白字符token
+            if token.text.strip() == "":
+                i += 1
+                continue
+            
             # 检查是否需要换行
-            if self._should_break_line(current_line, token, current_line_tokens):
-                # 完成当前行
-                if current_line:
+            if self._should_break_line(current_line, token, current_line_tokens, tokens, i):
+                # 完成当前行（只有当行有实际内容时才添加）
+                if current_line.strip():
                     line_info = {
                         "text": current_line,
                         "offset": line_offset,
@@ -337,8 +342,8 @@ class CkipProcessor:
             
             i += 1
         
-        # 处理最后一行
-        if current_line:
+        # 处理最后一行（只有当行有实际内容时才添加）
+        if current_line.strip():
             line_info = {
                 "text": current_line,
                 "offset": line_offset,
@@ -357,7 +362,7 @@ class CkipProcessor:
         
         return pages
     
-    def _should_break_line(self, current_line: str, token: TokenInfo, current_tokens: List[TokenInfo]) -> bool:
+    def _should_break_line(self, current_line: str, token: TokenInfo, current_tokens: List[TokenInfo], tokens: List[TokenInfo], i: int) -> bool:
         """判断是否需要换行"""
         # 如果当前行加上新token超过字符限制
         if len(current_line) + len(token.text) > self.chars_per_line:
@@ -367,7 +372,29 @@ class CkipProcessor:
         if token.text in self.no_break_punctuation and len(current_line) == 0:
             return False
         
-        # 如果下一个token是标点符号，尝试不换行
+        # 如果当前token是标点符号，尽量不换行（保持标点在行尾）
+        if token.text in self.no_break_punctuation:
+            return False
+        
+        # 如果下一个token是标点符号，尝试不换行（让标点跟在前面的词后面）
+        if i < len(tokens) - 1:
+            next_token = tokens[i + 1]
+            if next_token.text in self.no_break_punctuation:
+                return False
+        
+        # 检查语义连贯性：避免在词中间换行
+        # 如果当前token很短（1-2字符）且当前行接近满，考虑换行
+        if len(token.text) <= 2 and len(current_line) >= self.chars_per_line - 2:
+            # 但如果是标点符号，还是不要换行
+            if token.text not in self.no_break_punctuation:
+                return True
+        
+        # 改进：如果当前行已经很长，且下一个token是标点，强制换行
+        if len(current_line) >= self.chars_per_line - 1 and i < len(tokens) - 1:
+            next_token = tokens[i + 1]
+            if next_token.text in self.no_break_punctuation:
+                return True
+        
         return False
     
     def _add_entities_to_pages(self, pages: List[PageLayout], entities: List[EntityInfo]):
