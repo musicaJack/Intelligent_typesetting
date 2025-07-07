@@ -495,4 +495,6 @@ class CkipProcessor:
                 lines.append(line_info["text"])
             
             # 页面结束
-            lines.append("") 
+            lines.append("")
+        
+        return "\n".join(lines) 
