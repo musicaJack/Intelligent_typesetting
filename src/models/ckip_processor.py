@@ -478,23 +478,23 @@ class CkipProcessor:
             raise
     
     def _generate_txt_content(self, pages: List[PageLayout]) -> str:
-        """生成适合小屏幕的纯文本内容"""
+        """生成适合小屏幕的纯文本内容，包含结构化标签供MCU检索"""
         lines = []
         
         for page in pages:
-            # 添加页面分隔符
+            # 添加页面开始标签（MCU可快速定位）
             if page.page_id > 1:
                 lines.append("")
-                lines.append("=" * self.chars_per_line)
-                lines.append(f"第 {page.page_id} 页")
-                lines.append("=" * self.chars_per_line)
+                lines.append(f"<PAGE_{page.page_id:03d}_START>")
                 lines.append("")
             
-            # 添加页面内容
-            for line_info in page.lines:
-                lines.append(line_info["text"])
+            # 添加页面内容，每行都有行号标签
+            for i, line_info in enumerate(page.lines, 1):
+                # 添加行标签（MCU可快速定位到具体行）
+                lines.append(f"<LINE_{page.page_id:03d}_{i:02d}> {line_info['text']}")
             
-            # 页面结束
+            # 添加页面结束标签
+            lines.append(f"<PAGE_{page.page_id:03d}_END>")
             lines.append("")
         
         return "\n".join(lines) 
