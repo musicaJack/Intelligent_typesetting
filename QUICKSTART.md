@@ -64,7 +64,7 @@ python -m src.cli ckip-typeset files/input.txt -o my_output.txt
 python -m src.cli ckip-typeset files/input.txt -o test_output.txt -f txt --chars-per-line 16 --lines-per-page 12
 
 # 使用GPU加速（推荐用于4090D显卡）
-python -m src.cli ckip-typeset files/input.txt -o gpu_output.txt --device cuda:0 --chars-per-line 16 --lines-per-page 12
+python -m src.cli ckip-typeset files/input.txt -o files/output.txt --device cuda:0 --chars-per-line 16 --lines-per-page 12
 
 # 或生成JSON格式
 python -m src.cli ckip-typeset files/input.txt -o my_output.json -f json
