@@ -485,8 +485,8 @@ class CkipProcessor:
             # 添加页面开始标签（MCU可快速定位）
             if page.page_id > 1:
                 lines.append("")
-                lines.append(f"<PAGE_{page.page_id:03d}_START>")
-                lines.append("")
+            lines.append(f"<PAGE_{page.page_id:03d}_START>")
+            lines.append("")
             
             # 添加页面内容，每行都有行号标签
             for i, line_info in enumerate(page.lines, 1):

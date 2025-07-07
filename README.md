@@ -8,16 +8,18 @@
 - **智能分词**: 准确识别中文词边界和词性
 - **实体识别**: 自动识别人名、地名、组织机构等命名实体
 - **智能排版**: 根据每行35字、每页18行的标准进行格式化排版
-- **JSON输出**: 生成轻量化的JSON格式，适合MCU直接渲染
+- **多格式输出**: 支持JSON和TXT两种输出格式
+- **结构化标签**: TXT格式包含MCU友好的结构化标签，支持快速检索
 - **标点优化**: 智能处理标点符号，避免行首出现标点
 - **实体保护**: 确保命名实体在排版中不被拆分
+- **MCU优化**: 专为小屏幕设备（如ST7306、RP2040）优化
 
 ## 📋 系统流程
 
 ```
-输入文本文件 → CKIP Transformers引擎 → 智能排版引擎 → JSON输出文件
+输入文本文件 → CKIP Transformers引擎 → 智能排版引擎 → 多格式输出
      ↓              ↓                    ↓              ↓
-  文本读取      分词+词性+实体        页面布局生成     排版结果
+  文本读取      分词+词性+实体        页面布局生成     JSON/TXT格式
 ```
 
 ### 核心处理阶段
@@ -32,7 +34,7 @@
    - 标点避头尾规则处理
    - 实体完整性保护
    - 分页优化
-4. **JSON格式生成**: 轻量化数据结构，支持MCU直接使用
+4. **多格式输出**: 支持JSON和TXT格式，TXT格式包含结构化标签供MCU快速检索
 
 ## 🛠️ 安装
 
@@ -69,11 +71,17 @@ python test_ckip.py
 # 处理文本文件并生成排版JSON
 python -m src.cli ckip-typeset files/input.txt -o output.json
 
+# 生成TXT格式（推荐用于MCU）
+python -m src.cli ckip-typeset files/input.txt -o output.txt -f txt
+
 # 自定义排版参数
 python -m src.cli ckip-typeset files/input.txt \
     --chars-per-line 40 \
     --lines-per-page 20 \
     --output custom_layout.json
+
+# 小屏幕设备优化（ST7306等）
+python -m src.cli small-screen files/input.txt -o small_screen.txt
 ```
 
 #### 其他功能
@@ -118,8 +126,11 @@ print(f"总字符数: {layout_result['metadata']['total_chars']}")
 
 #### 处理文件
 ```python
-# 处理整个文件
+# 处理整个文件生成JSON
 result = processor.process_file("input.txt", "output.json")
+
+# 处理文件生成TXT格式
+result = processor.process_file_txt("input.txt", "output.txt")
 ```
 
 ### 演示脚本
@@ -136,7 +147,7 @@ python test_ckip.py
 
 ## 📊 输出格式
 
-### JSON结构
+### JSON格式（适合复杂应用）
 ```json
 {
   "metadata": {
@@ -243,6 +254,12 @@ processor.lines_per_page = 20  # 自定义每页行数
 - 最小化JSON字段名
 - 偏移量定位，支持按需读取
 - 实体位置标记，便于高亮显示
+
+### TXT格式（推荐用于MCU）
+- 结构化标签，支持快速检索
+- 轻量化存储，适合小内存设备
+- 直接文本渲染，无需解析
+- 详细说明请参考 [output_txt.README.md](output_txt.README.md)
 
 ## 📝 示例
 
