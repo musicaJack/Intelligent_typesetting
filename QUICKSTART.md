@@ -64,7 +64,7 @@ python -m src.cli ckip-typeset files/input.txt -o my_output.txt
 python -m src.cli ckip-typeset files/input.txt -o test_output.txt -f txt --chars-per-line 16 --lines-per-page 12
 
 # 使用GPU加速（推荐用于4090D显卡）
-python -m src.cli ckip-typeset files/input.txt -o gpu_output.txt --device cuda:0
+python -m src.cli ckip-typeset files/input.txt -o gpu_output.txt --device cuda:0 --chars-per-line 16 --lines-per-page 12
 
 # 或生成JSON格式
 python -m src.cli ckip-typeset files/input.txt -o my_output.json -f json
@@ -77,7 +77,7 @@ python -m src.cli ckip-typeset files/input.txt -o my_output.json -f json
 python -m src.cli small-screen files/input.txt -o small_screen_output.txt
 
 # 使用GPU加速的小屏幕排版
-python -m src.cli small-screen files/input.txt -o gpu_small.txt --device cuda:0
+python -m src.cli small-screen files/input.txt -o gpu_small.txt --device cuda:0 --chars-per-line 16 --lines-per-page 12
 
 # 自定义参数
 python -m src.cli small-screen files/input.txt \
@@ -116,7 +116,7 @@ python -m src.cli ckip-typeset input.txt
 python -m src.cli ckip-typeset input.txt -o output.txt
 
 # 使用GPU加速（推荐4090D显卡）
-python -m src.cli ckip-typeset input.txt -o output.txt --device cuda:0
+python -m src.cli ckip-typeset input.txt -o output.txt --device cuda:0 --chars-per-line 16 --lines-per-page 12
 
 # 自定义排版参数
 python -m src.cli ckip-typeset input.txt \

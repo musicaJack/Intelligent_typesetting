@@ -114,17 +114,15 @@ class CkipProcessor:
             logger.info(f"正在加载CKIP模型: {self.model_name}")
             logger.info(f"使用设备: {self.device}")
             
-            # 设置设备
-            device_kwargs = {"device": self.device} if self.device != "cpu" else {}
-            
-            self.ws_driver = CkipWordSegmenter(model=self.model_name, **device_kwargs)
-            self.pos_driver = CkipPosTagger(model=self.model_name, **device_kwargs)
-            self.ner_driver = CkipNerChunker(model=self.model_name, **device_kwargs)
+            # CKIP Transformers会自动检测GPU，不需要手动指定device参数
+            self.ws_driver = CkipWordSegmenter(model=self.model_name)
+            self.pos_driver = CkipPosTagger(model=self.model_name)
+            self.ner_driver = CkipNerChunker(model=self.model_name)
             
             logger.info("CKIP模型加载成功")
             
             # 显示GPU使用情况
-            if self.device.startswith("cuda"):
+            if self.device.startswith("cuda") and torch.cuda.is_available():
                 gpu_memory_allocated = torch.cuda.memory_allocated(0) / (1024**3)
                 gpu_memory_reserved = torch.cuda.memory_reserved(0) / (1024**3)
                 logger.info(f"GPU显存使用: {gpu_memory_allocated:.2f}GB (已分配) / {gpu_memory_reserved:.2f}GB (已保留)")

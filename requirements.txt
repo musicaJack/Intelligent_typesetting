@@ -1,9 +1,9 @@
-# 核心依赖
-torch>=1.12.0
-transformers>=4.20.0
-tokenizers>=0.12.0
+# 核心依赖 - 固定版本以确保与 ckip-transformers 0.3.x 兼容
+torch==1.12.0
+transformers==4.20.0
+tokenizers==0.12.1
 
-# CKIP Transformers引擎
+# CKIP Transformers引擎 - 当前最高版本
 ckip-transformers>=0.3.0
 
 # 数据处理
