@@ -385,4 +385,79 @@ class CkipProcessor:
             
         except Exception as e:
             logger.error(f"文件处理失败: {e}")
-            raise 
+            raise
+    
+    def process_file_txt(self, input_file: str, output_file: str) -> Dict[str, Any]:
+        """
+        处理文件并生成适合小屏幕的纯文本排版
+        
+        Args:
+            input_file: 输入文件路径
+            output_file: 输出文件路径
+            
+        Returns:
+            处理结果
+        """
+        try:
+            # 读取输入文件
+            with open(input_file, 'r', encoding='utf-8') as f:
+                text = f.read()
+            
+            logger.info(f"读取文件: {input_file}, 字符数: {len(text)}")
+            
+            # 处理文本
+            result = self.process_text(text)
+            tokens = [TokenInfo(**token_dict) for token_dict in result["tokens"]]
+            entities = [EntityInfo(**entity_dict) for entity_dict in result["entities"]]
+            
+            # 生成页面布局
+            pages = self._generate_pages(tokens, entities)
+            
+            # 生成纯文本输出
+            txt_content = self._generate_txt_content(pages)
+            
+            # 保存TXT文件
+            output_path = Path(output_file)
+            output_path.parent.mkdir(parents=True, exist_ok=True)
+            
+            with open(output_path, 'w', encoding='utf-8') as f:
+                f.write(txt_content)
+            
+            # 构建返回结果
+            layout_data = {
+                "metadata": {
+                    "title": "智能排版文本",
+                    "total_pages": len(pages),
+                    "chars_per_line": self.chars_per_line,
+                    "lines_per_page": self.lines_per_page,
+                    "total_chars": sum(page.total_chars for page in pages)
+                },
+                "pages": [asdict(page) for page in pages]
+            }
+            
+            logger.info(f"TXT文件已保存: {output_path}")
+            return layout_data
+            
+        except Exception as e:
+            logger.error(f"文件处理失败: {e}")
+            raise
+    
+    def _generate_txt_content(self, pages: List[PageLayout]) -> str:
+        """生成适合小屏幕的纯文本内容"""
+        lines = []
+        
+        for page in pages:
+            # 添加页面分隔符
+            if page.page_id > 1:
+                lines.append("")
+                lines.append("=" * self.chars_per_line)
+                lines.append(f"第 {page.page_id} 页")
+                lines.append("=" * self.chars_per_line)
+                lines.append("")
+            
+            # 添加页面内容
+            for line_info in page.lines:
+                lines.append(line_info["text"])
+            
+            # 页面结束
+            lines.append("") 

@@ -1,7 +1,8 @@
 # 应用配置
 app:
-  name: "Intelligent Typesetting"
-  version: "0.1.0"
+  name: "智能排版系统"
+  version: "1.0.0"
+  description: "基于CKIP Transformers的中文智能排版工具"
   debug: false
   log_level: "INFO"
 
@@ -11,7 +12,7 @@ model:
   bert:
     model_name: "bert-base-chinese"  # 或 "hfl/chinese-bert-wwm-ext"
     max_length: 512
-    batch_size: 16
+    batch_size: 8
     device: "auto"  # "cpu", "cuda", "auto"
   
   # 模型缓存目录
@@ -19,6 +20,22 @@ model:
   
   # 模型保存路径
   save_path: "./models/intelligent_typesetting_model"
+
+  ckip:
+    model_name: "bert-base"
+    # 小屏幕设备配置 (ST7306: 300x400像素)
+    small_screen:
+      chars_per_line: 16    # 每行16个中文字符
+      lines_per_page: 12    # 每页12行
+      margin_pixels: 20     # 留白像素
+      screen_width: 300     # 屏幕宽度
+      screen_height: 400    # 屏幕高度
+      font_size: 16         # 字体大小(像素)
+    
+    # 标准配置
+    standard:
+      chars_per_line: 35    # 每行35个中文字符
+      lines_per_page: 18    # 每页18行
 
 # 数据处理配置
 data:
@@ -31,6 +48,12 @@ data:
   
   # 编码
   encoding: "utf-8"
+  
+  # 文件处理配置
+  file_processing:
+    max_file_size: "10MB"
+    backup_original: true
+    create_backup: true
 
 # 训练配置（如果需要微调）
 training:
@@ -64,6 +87,7 @@ logging:
   level: "INFO"
   format: "{time:YYYY-MM-DD HH:mm:ss} | {level} | {name}:{function}:{line} - {message}"
   file: "./logs/app.log"
+  max_size: "10MB"
   rotation: "1 day"
   retention: "30 days"
 
@@ -72,4 +96,27 @@ api:
   host: "0.0.0.0"
   port: 8000
   workers: 4
-  timeout: 30 
+  timeout: 30
+
+# 性能配置
+performance:
+  max_workers: 4
+  timeout: 300
+  memory_limit: "2GB"
+  cache_enabled: true
+  cache_size: "100MB"
+
+# 输出格式配置
+output:
+  default_format: "txt"  # txt, json
+  include_metadata: true
+  include_entities: true
+  include_tokens: false  # 小屏幕设备建议关闭
+  
+  # 小屏幕优化
+  small_screen_optimized:
+    enable: true
+    remove_extra_spaces: true
+    simplify_punctuation: true
+    max_line_length: 16
+    page_breaks: true 

@@ -203,12 +203,13 @@ def info(ctx):
 
 @cli.command()
 @click.argument('input_file', type=click.Path(exists=True))
-@click.option('--output', '-o', type=click.Path(), help='输出JSON文件路径')
+@click.option('--output', '-o', type=click.Path(), help='输出文件路径')
 @click.option('--model', '-m', default='bert-base', help='CKIP模型名称')
-@click.option('--chars-per-line', default=35, help='每行字符数')
-@click.option('--lines-per-page', default=18, help='每页行数')
+@click.option('--chars-per-line', default=16, help='每行字符数')
+@click.option('--lines-per-page', default=12, help='每页行数')
+@click.option('--format', '-f', type=click.Choice(['json', 'txt']), default='txt', help='输出格式')
 @click.pass_context
-def ckip_typeset(ctx, input_file: str, output: str, model: str, chars_per_line: int, lines_per_page: int):
+def ckip_typeset(ctx, input_file: str, output: str, model: str, chars_per_line: int, lines_per_page: int, format: str):
     """使用CKIP Transformers进行智能排版"""
     config = ctx.obj['config']
     
@@ -224,11 +225,15 @@ def ckip_typeset(ctx, input_file: str, output: str, model: str, chars_per_line: 
         # 确定输出路径
         if output is None:
             input_path = Path(input_file)
-            output = input_path.parent / f"{input_path.stem}_ckip_layout.json"
+            output = input_path.parent / f"{input_path.stem}_ckip_layout.{format}"
         
         # 处理文件
         click.echo(f"正在处理文件: {input_file}")
-        result = processor.process_file(input_file, str(output))
+        
+        if format == 'json':
+            result = processor.process_file(input_file, str(output))
+        else:
+            result = processor.process_file_txt(input_file, str(output))
         
         # 显示结果
         click.echo("✅ 处理完成！")
@@ -256,6 +261,81 @@ def ckip_typeset(ctx, input_file: str, output: str, model: str, chars_per_line: 
     click.echo(f"输入目录: {config.get('data.input_dir', 'N/A')}")
     click.echo(f"输出目录: {config.get('data.output_dir', 'N/A')}")
     click.echo(f"支持格式: {', '.join(config.get('data.supported_formats', []))}")
+
+
+@cli.command()
+@click.argument('input_file', type=click.Path(exists=True))
+@click.option('--output', '-o', type=click.Path(), help='输出文件路径')
+@click.option('--model', '-m', default='bert-base', help='CKIP模型名称')
+@click.option('--chars-per-line', default=16, help='每行字符数')
+@click.option('--lines-per-page', default=12, help='每页行数')
+@click.option('--format', '-f', type=click.Choice(['json', 'txt']), default='txt', help='输出格式')
+@click.pass_context
+def small_screen(ctx, input_file: str, output: str, model: str, chars_per_line: int, lines_per_page: int, format: str):
+    """为小屏幕设备(ST7306等)进行优化排版"""
+    config = ctx.obj['config']
+    
+    try:
+        # 获取小屏幕配置
+        small_screen_config = config.get('model.ckip.small_screen', {})
+        
+        # 使用配置中的默认值
+        if chars_per_line == 16:
+            chars_per_line = small_screen_config.get('chars_per_line', 16)
+        if lines_per_page == 12:
+            lines_per_page = small_screen_config.get('lines_per_page', 12)
+        
+        # 初始化CKIP处理器
+        click.echo(f"正在初始化CKIP处理器 (模型: {model})...")
+        processor = CkipProcessor(model_name=model)
+        
+        # 设置排版参数
+        processor.chars_per_line = chars_per_line
+        processor.lines_per_page = lines_per_page
+        
+        # 确定输出路径
+        if output is None:
+            input_path = Path(input_file)
+            output = input_path.parent / f"{input_path.stem}_small_screen.{format}"
+        
+        # 处理文件
+        click.echo(f"正在处理文件: {input_file}")
+        click.echo(f"📱 小屏幕优化模式")
+        click.echo(f"📏 每行字符数: {chars_per_line}")
+        click.echo(f"📄 每页行数: {lines_per_page}")
+        
+        if format == 'json':
+            result = processor.process_file(input_file, str(output))
+        else:
+            result = processor.process_file_txt(input_file, str(output))
+        
+        # 显示结果
+        click.echo("✅ 处理完成！")
+        click.echo(f"📁 输出文件: {output}")
+        click.echo(f"📊 生成页数: {result['metadata']['total_pages']}")
+        click.echo(f"📏 每行字符数: {result['metadata']['chars_per_line']}")
+        click.echo(f"📄 每页行数: {result['metadata']['lines_per_page']}")
+        click.echo(f"📝 总字符数: {result['metadata']['total_chars']}")
+        
+        # 显示文件大小信息
+        output_path = Path(output)
+        if output_path.exists():
+            file_size = output_path.stat().st_size
+            file_size_mb = file_size / (1024 * 1024)
+            click.echo(f"💾 文件大小: {file_size_mb:.2f} MB")
+        
+        # 显示第一页预览
+        if result["pages"]:
+            first_page = result["pages"][0]
+            click.echo(f"\n📄 第一页预览 (共{len(first_page['lines'])}行):")
+            for i, line in enumerate(first_page['lines'][:3], 1):
+                click.echo(f"  {i}. {line['text']}")
+            if len(first_page['lines']) > 3:
+                click.echo(f"  ... (还有{len(first_page['lines']) - 3}行)")
+        
+    except Exception as e:
+        click.echo(f"处理失败: {e}", err=True)
+        ctx.exit(1)
 
 
 def main():
