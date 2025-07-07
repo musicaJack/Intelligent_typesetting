@@ -12,8 +12,8 @@ model:
   bert:
     model_name: "bert-base-chinese"  # 或 "hfl/chinese-bert-wwm-ext"
     max_length: 512
-    batch_size: 8
-    device: "auto"  # "cpu", "cuda", "auto"
+    batch_size: 16  # 4090D显卡可以使用更大的batch_size
+    device: "auto"  # auto, cpu, cuda, cuda:0
   
   # 模型缓存目录
   cache_dir: "./models"
@@ -23,6 +23,9 @@ model:
 
   ckip:
     model_name: "bert-base"
+    device: "auto"  # auto, cpu, cuda, cuda:0
+    batch_size: 16  # 4090D显卡优化
+    
     # 小屏幕设备配置 (ST7306: 300x400像素)
     small_screen:
       chars_per_line: 16    # 每行16个中文字符
@@ -36,6 +39,14 @@ model:
     standard:
       chars_per_line: 35    # 每行35个中文字符
       lines_per_page: 18    # 每页18行
+    
+    # 4090D显卡优化配置
+    rtx4090_optimized:
+      device: "cuda:0"
+      batch_size: 32        # 4090D可以处理更大的batch
+      max_length: 512
+      use_mixed_precision: true  # 使用混合精度加速
+      memory_efficient: false    # 4090D显存充足，不需要内存优化
 
 # 数据处理配置
 data:
@@ -51,7 +62,7 @@ data:
   
   # 文件处理配置
   file_processing:
-    max_file_size: "10MB"
+    max_file_size: "100MB"  # 4090D可以处理更大的文件
     backup_original: true
     create_backup: true
 
@@ -100,11 +111,18 @@ api:
 
 # 性能配置
 performance:
-  max_workers: 4
-  timeout: 300
-  memory_limit: "2GB"
+  max_workers: 8            # 4090D可以支持更多并发
+  timeout: 600              # 增加超时时间
+  memory_limit: "8GB"       # 4090D系统通常内存充足
   cache_enabled: true
-  cache_size: "100MB"
+  cache_size: "500MB"       # 增加缓存大小
+  
+  # GPU优化
+  gpu:
+    use_mixed_precision: true
+    memory_fraction: 0.9    # 使用90%显存
+    allow_growth: true      # 动态分配显存
+    enable_cudnn: true      # 启用cuDNN加速
 
 # 输出格式配置
 output:

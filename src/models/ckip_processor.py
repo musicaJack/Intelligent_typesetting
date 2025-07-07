@@ -10,6 +10,7 @@ CKIP Transformers文本处理模块
 
 import json
 import re
+import torch
 from typing import Dict, List, Optional, Tuple, Any
 from dataclasses import dataclass, asdict
 from pathlib import Path
@@ -50,14 +51,16 @@ class PageLayout:
 class CkipProcessor:
     """CKIP文本处理器"""
     
-    def __init__(self, model_name: str = "bert-base"):
+    def __init__(self, model_name: str = "bert-base", device: str = "auto"):
         """
         初始化CKIP处理器
         
         Args:
             model_name: 使用的模型名称，默认使用bert-base
+            device: 设备类型，"auto", "cpu", "cuda", "cuda:0"等
         """
         self.model_name = model_name
+        self.device = self._get_device(device)
         self.ws_driver = None
         self.pos_driver = None
         self.ner_driver = None
@@ -81,16 +84,50 @@ class CkipProcessor:
         # 初始化模型
         self._load_models()
     
+    def _get_device(self, device: str) -> str:
+        """获取设备配置"""
+        if device == "auto":
+            if torch.cuda.is_available():
+                # 检测GPU数量和显存
+                gpu_count = torch.cuda.device_count()
+                logger.info(f"检测到 {gpu_count} 个GPU设备")
+                
+                for i in range(gpu_count):
+                    gpu_name = torch.cuda.get_device_name(i)
+                    gpu_memory = torch.cuda.get_device_properties(i).total_memory / (1024**3)
+                    logger.info(f"GPU {i}: {gpu_name}, 显存: {gpu_memory:.1f}GB")
+                
+                # 使用第一个GPU
+                device = "cuda:0"
+                logger.info(f"自动选择设备: {device}")
+            else:
+                device = "cpu"
+                logger.info("未检测到GPU，使用CPU")
+        else:
+            logger.info(f"使用指定设备: {device}")
+        
+        return device
+    
     def _load_models(self):
         """加载CKIP模型"""
         try:
             logger.info(f"正在加载CKIP模型: {self.model_name}")
+            logger.info(f"使用设备: {self.device}")
             
-            self.ws_driver = CkipWordSegmenter(model=self.model_name)
-            self.pos_driver = CkipPosTagger(model=self.model_name)
-            self.ner_driver = CkipNerChunker(model=self.model_name)
+            # 设置设备
+            device_kwargs = {"device": self.device} if self.device != "cpu" else {}
+            
+            self.ws_driver = CkipWordSegmenter(model=self.model_name, **device_kwargs)
+            self.pos_driver = CkipPosTagger(model=self.model_name, **device_kwargs)
+            self.ner_driver = CkipNerChunker(model=self.model_name, **device_kwargs)
             
             logger.info("CKIP模型加载成功")
+            
+            # 显示GPU使用情况
+            if self.device.startswith("cuda"):
+                gpu_memory_allocated = torch.cuda.memory_allocated(0) / (1024**3)
+                gpu_memory_reserved = torch.cuda.memory_reserved(0) / (1024**3)
+                logger.info(f"GPU显存使用: {gpu_memory_allocated:.2f}GB (已分配) / {gpu_memory_reserved:.2f}GB (已保留)")
             
         except Exception as e:
             logger.error(f"CKIP模型加载失败: {e}")

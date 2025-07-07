@@ -61,6 +61,10 @@ python test_ckip.py
 ```bash
 # 处理文本文件并生成排版TXT（推荐）
 python -m src.cli ckip-typeset files/input.txt -o my_output.txt
+python -m src.cli ckip-typeset files/input.txt -o test_output.txt -f txt --chars-per-line 16 --lines-per-page 12
+
+# 使用GPU加速（推荐用于4090D显卡）
+python -m src.cli ckip-typeset files/input.txt -o gpu_output.txt --device cuda:0
 
 # 或生成JSON格式
 python -m src.cli ckip-typeset files/input.txt -o my_output.json -f json
@@ -72,14 +76,28 @@ python -m src.cli ckip-typeset files/input.txt -o my_output.json -f json
 # 专门为小屏幕设备优化排版
 python -m src.cli small-screen files/input.txt -o small_screen_output.txt
 
+# 使用GPU加速的小屏幕排版
+python -m src.cli small-screen files/input.txt -o gpu_small.txt --device cuda:0
+
 # 自定义参数
 python -m src.cli small-screen files/input.txt \
     --chars-per-line 16 \
     --lines-per-page 12 \
+    --device cuda:0 \
     -o custom_small.txt
 ```
 
-### 4. 查看完整演示
+### 4. GPU检测和测试
+
+```bash
+# 检测GPU设备（推荐4090D用户运行）
+python test_gpu.py
+
+# 查看GPU使用情况
+nvidia-smi
+```
+
+### 5. 查看完整演示
 
 ```bash
 # 运行完整演示
@@ -97,6 +115,9 @@ python -m src.cli ckip-typeset input.txt
 # 自定义输出文件
 python -m src.cli ckip-typeset input.txt -o output.txt
 
+# 使用GPU加速（推荐4090D显卡）
+python -m src.cli ckip-typeset input.txt -o output.txt --device cuda:0
+
 # 自定义排版参数
 python -m src.cli ckip-typeset input.txt \
     --chars-per-line 40 \
@@ -108,6 +129,13 @@ python -m src.cli small-screen input.txt \
     --chars-per-line 16 \
     --lines-per-page 12 \
     -o small_screen.txt
+
+# 小屏幕设备 + GPU加速
+python -m src.cli small-screen input.txt \
+    --chars-per-line 16 \
+    --lines-per-page 12 \
+    --device cuda:0 \
+    -o gpu_small.txt
 ```
 
 ### Python代码使用
@@ -230,6 +258,34 @@ A: 建议使用以下优化设置：
 - 每页行数：10-12
 - 输出格式：TXT
 - 字体大小：16像素
+
+### Q: 如何启用GPU加速？
+A: 使用 `--device` 参数指定GPU设备：
+```bash
+# 自动检测GPU
+python -m src.cli ckip-typeset input.txt --device auto
+
+# 指定GPU设备
+python -m src.cli ckip-typeset input.txt --device cuda:0
+
+# 强制使用CPU
+python -m src.cli ckip-typeset input.txt --device cpu
+```
+
+### Q: 4090D显卡性能优化建议？
+A: 针对4090D显卡的优化建议：
+- 使用 `--device cuda:0` 启用GPU加速
+- 增加batch_size到16-32
+- 启用混合精度加速
+- 监控显存使用情况
+- 运行 `python test_gpu.py` 检测GPU状态
+
+### Q: GPU显存不足怎么办？
+A: 如果遇到显存不足问题：
+- 减少batch_size
+- 使用 `--device cpu` 切换到CPU模式
+- 关闭其他GPU程序释放显存
+- 使用较小的模型
 
 ## 📚 下一步
 

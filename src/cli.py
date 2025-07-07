@@ -208,15 +208,16 @@ def info(ctx):
 @click.option('--chars-per-line', default=16, help='每行字符数')
 @click.option('--lines-per-page', default=12, help='每页行数')
 @click.option('--format', '-f', type=click.Choice(['json', 'txt']), default='txt', help='输出格式')
+@click.option('--device', '-d', default='auto', help='设备类型 (auto, cpu, cuda, cuda:0等)')
 @click.pass_context
-def ckip_typeset(ctx, input_file: str, output: str, model: str, chars_per_line: int, lines_per_page: int, format: str):
+def ckip_typeset(ctx, input_file: str, output: str, model: str, chars_per_line: int, lines_per_page: int, format: str, device: str):
     """使用CKIP Transformers进行智能排版"""
     config = ctx.obj['config']
     
     try:
         # 初始化CKIP处理器
         click.echo(f"正在初始化CKIP处理器 (模型: {model})...")
-        processor = CkipProcessor(model_name=model)
+        processor = CkipProcessor(model_name=model, device=device)
         
         # 设置排版参数
         processor.chars_per_line = chars_per_line
@@ -270,8 +271,9 @@ def ckip_typeset(ctx, input_file: str, output: str, model: str, chars_per_line: 
 @click.option('--chars-per-line', default=16, help='每行字符数')
 @click.option('--lines-per-page', default=12, help='每页行数')
 @click.option('--format', '-f', type=click.Choice(['json', 'txt']), default='txt', help='输出格式')
+@click.option('--device', '-d', default='auto', help='设备类型 (auto, cpu, cuda, cuda:0等)')
 @click.pass_context
-def small_screen(ctx, input_file: str, output: str, model: str, chars_per_line: int, lines_per_page: int, format: str):
+def small_screen(ctx, input_file: str, output: str, model: str, chars_per_line: int, lines_per_page: int, format: str, device: str):
     """为小屏幕设备(ST7306等)进行优化排版"""
     config = ctx.obj['config']
     
@@ -287,7 +289,7 @@ def small_screen(ctx, input_file: str, output: str, model: str, chars_per_line: 
         
         # 初始化CKIP处理器
         click.echo(f"正在初始化CKIP处理器 (模型: {model})...")
-        processor = CkipProcessor(model_name=model)
+        processor = CkipProcessor(model_name=model, device=device)
         
         # 设置排版参数
         processor.chars_per_line = chars_per_line
@@ -303,6 +305,7 @@ def small_screen(ctx, input_file: str, output: str, model: str, chars_per_line: 
         click.echo(f"📱 小屏幕优化模式")
         click.echo(f"📏 每行字符数: {chars_per_line}")
         click.echo(f"📄 每页行数: {lines_per_page}")
+        click.echo(f"🖥️ 使用设备: {processor.device}")
         
         if format == 'json':
             result = processor.process_file(input_file, str(output))
